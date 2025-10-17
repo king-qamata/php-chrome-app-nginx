@@ -71,15 +71,15 @@ COPY supervisord-chromedriver.conf /etc/supervisor/conf.d/chromedriver.conf
 COPY php-azure.ini /usr/local/etc/php/conf.d/999-custom.ini
 
 # Create startup script for Chrome profile cleanup
-COPY startup.sh /startup.sh
-RUN chmod +x /startup.sh
+#COPY startup.sh /startup.sh
+#RUN chmod +x /startup.sh
 
 # Declare volume for Azure persistent storage
 VOLUME ["/home"]
 
 WORKDIR /home/site/wwwroot
 
-EXPOSE 80
+#EXPOSE 80
 
 # Use the existing Azure startup mechanism with our customizations
-CMD ["/startup.sh"]
+#CMD ["/startup.sh"]
