@@ -68,7 +68,7 @@ RUN chmod -R 755 /home/site/wwwroot
 COPY supervisord-chromedriver.conf /etc/supervisor/conf.d/chromedriver.conf
 
 # Copy custom PHP configuration if needed
-COPY php-azure.ini /usr/local/etc/php/conf.d/999-custom.ini 2>/dev/null || :
+COPY php-azure.ini /usr/local/etc/php/conf.d/999-custom.ini
 
 # Create startup script for Chrome profile cleanup
 COPY startup.sh /startup.sh
