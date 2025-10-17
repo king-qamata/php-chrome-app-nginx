@@ -5,28 +5,27 @@ use Facebook\WebDriver\Chrome\ChromeOptions;
 use Facebook\WebDriver\Remote\DesiredCapabilities;
 use Facebook\WebDriver\Remote\RemoteWebDriver;
 
-// Use the shared volume path for Chrome profiles
+// Use a unique user data directory for each session
 $userDataDir = '/tmp/chrome-profiles/profile-' . uniqid();
 
 $options = new ChromeOptions();
 $options->addArguments([
-    '--headless=new',  // New headless mode in newer Chrome versions
+    '--headless=new',
     '--no-sandbox',
     '--disable-dev-shm-usage',
     '--disable-gpu',
     '--disable-software-rasterizer',
     '--remote-debugging-port=0',
     '--user-data-dir=' . $userDataDir,
-    '--disable-blink-features=AutomationControlled',
-    '--user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+    '--disable-blink-features=AutomationControlled'
 ]);
 
 $capabilities = DesiredCapabilities::chrome();
 $capabilities->setCapability(ChromeOptions::CAPABILITY, $options);
 
 try {
-    // Connect to the ChromeDriver service managed by supervisor
-    $driver = RemoteWebDriver::create('http://localhost:9515', $capabilities, 15000, 15000);
+    // Connect to the existing ChromeDriver service running on port 9515
+    $driver = RemoteWebDriver::create('http://localhost:9515', $capabilities, 30000, 30000);
     
     $driver->get('https://example.com');
     echo "Title: " . $driver->getTitle() . "\n";
