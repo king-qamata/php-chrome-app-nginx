@@ -85,4 +85,4 @@ WORKDIR /home/site/wwwroot
 EXPOSE 80
 
 # Use our custom startup script
-CMD ["/startup.sh"]
+#CMD ["/startup.sh"]
