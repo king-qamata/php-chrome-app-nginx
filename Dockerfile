@@ -82,7 +82,7 @@ VOLUME ["/home"]
 
 WORKDIR /home/site/wwwroot
 
-EXPOSE 80
+#EXPOSE 80
 
 # Use our custom startup script
 #CMD ["/startup.sh"]
