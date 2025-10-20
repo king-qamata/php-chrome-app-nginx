@@ -23,9 +23,10 @@ ENV DEBIAN_FRONTEND=noninteractive \
 
 # Install additional system dependencies for Chrome
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    wget unzip jq \
+    wget unzip jq procps net-tools curl \
     libnss3 libgconf-2-4 libxi6 libgtk-3-0 \
     libx11-xcb1 libxcomposite1 libxdamage1 libxrandr2 \
+    xvfb \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Install Google Chrome
