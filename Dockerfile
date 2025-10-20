@@ -74,8 +74,8 @@ COPY supervisord-chromedriver.conf /etc/supervisor/conf.d/chromedriver.conf
 COPY php-azure.ini /usr/local/etc/php/conf.d/999-custom.ini
 
 # Copy our custom startup script
-COPY startup.sh /startup.sh
-RUN chmod +x /startup.sh
+#COPY startup.sh /startup.sh
+#RUN chmod +x /startup.sh
 
 # Declare volume for Azure persistent storage
 VOLUME ["/home"]
