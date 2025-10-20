@@ -23,9 +23,10 @@ ENV DEBIAN_FRONTEND=noninteractive \
 
 # Install additional system dependencies for Chrome
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    wget unzip jq \
+    wget unzip jq procps net-tools curl \
     libnss3 libgconf-2-4 libxi6 libgtk-3-0 \
     libx11-xcb1 libxcomposite1 libxdamage1 libxrandr2 \
+    xvfb \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Install Google Chrome
@@ -43,43 +44,32 @@ RUN JSON_URL="https://googlechromelabs.github.io/chrome-for-testing/last-known-g
     chmod +x /usr/local/bin/chromedriver && \
     rm -rf /tmp/*
 
-# Create additional directories for Chrome profiles
-RUN mkdir -p /tmp/chrome-profiles
+# Verify installations
+RUN google-chrome --version && chromedriver --version
 
-# Set proper permissions for Chrome directories
-RUN chmod -R 777 /tmp/chrome-profiles
+# Create directories
+RUN mkdir -p /tmp/chrome-profiles && \
+    mkdir -p /home/LogFiles && \
+    chmod -R 777 /tmp/chrome-profiles /home/LogFiles
 
-# Copy application files from builder to Azure directory
+# Copy application files
 COPY --from=builder /app/vendor /home/site/wwwroot/vendor
 COPY src/ /home/site/wwwroot/
 COPY composer.json /home/site/wwwroot/
 
-# Set proper permissions for Azure directory
+# Set proper permissions
 RUN chmod -R 755 /home/site/wwwroot
 
-# Copy custom configuration files (if they exist)
-# Note: Azure PHP image already has nginx and supervisor configured
-# We'll override with our custom configurations if needed
-
-# Copy custom nginx configuration if you have one
-#COPY nginx-azure.conf /etc/nginx/sites-available/default 2>/dev/null || :
-
-# Copy custom supervisor configuration for ChromeDriver
-COPY supervisord-chromedriver.conf /etc/supervisor/conf.d/chromedriver.conf
-
-# Copy custom PHP configuration if needed
-COPY php-azure.ini /usr/local/etc/php/conf.d/999-custom.ini
-
-# Create startup script for Chrome profile cleanup
-#COPY startup.sh /startup.sh
-#RUN chmod +x /startup.sh
+# Copy our custom startup script
+COPY startup.sh /startup.sh
+RUN chmod +x /startup.sh
 
 # Declare volume for Azure persistent storage
 VOLUME ["/home"]
 
 WORKDIR /home/site/wwwroot
 
-#EXPOSE 80
+EXPOSE 80
 
-# Use the existing Azure startup mechanism with our customizations
-#CMD ["/startup.sh"]
+# Use our custom startup script
+CMD ["/startup.sh"]
