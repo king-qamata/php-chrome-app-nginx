@@ -60,6 +60,19 @@ COPY composer.json /home/site/wwwroot/
 # Set proper permissions
 RUN chmod -R 755 /home/site/wwwroot
 
+# Copy custom configuration files (if they exist)
+# Note: Azure PHP image already has nginx and supervisor configured
+# We'll override with our custom configurations if needed
+
+# Copy custom nginx configuration if you have one
+#COPY nginx-azure.conf /etc/nginx/sites-available/default 2>/dev/null || :
+
+# Copy custom supervisor configuration for ChromeDriver
+COPY supervisord-chromedriver.conf /etc/supervisor/conf.d/chromedriver.conf
+
+# Copy custom PHP configuration if needed
+COPY php-azure.ini /usr/local/etc/php/conf.d/999-custom.ini
+
 # Copy our custom startup script
 COPY startup.sh /startup.sh
 RUN chmod +x /startup.sh
