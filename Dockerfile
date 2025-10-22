@@ -16,14 +16,16 @@ RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-di
 FROM mcr.microsoft.com/appsvc/php:8.3-fpm_20251016.4.tuxprod
 
 # Avoid interactive prompts
-ENV DEBIAN_FRONTEND=noninteractive
+ENV DEBIAN_FRONTEND=noninteractive \
+    PORT=80 \
+    WEBSITES_PORT=80 \
+    APPSETTING_WEBSITES_PORT=80
 
 # Install additional system dependencies for Chrome
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    wget unzip jq procps net-tools curl \
+    wget unzip jq \
     libnss3 libgconf-2-4 libxi6 libgtk-3-0 \
     libx11-xcb1 libxcomposite1 libxdamage1 libxrandr2 \
-    xvfb \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Install Google Chrome
@@ -41,37 +43,49 @@ RUN JSON_URL="https://googlechromelabs.github.io/chrome-for-testing/last-known-g
     chmod +x /usr/local/bin/chromedriver && \
     rm -rf /tmp/*
 
-# Verify installations
-RUN google-chrome --version && chromedriver --version
+# Create additional directories for Chrome profiles
+#RUN mkdir -p /tmp/chrome-profiles
 
-# Create directories and set proper permissions
 RUN mkdir -p /tmp/chrome-profiles && \
     mkdir -p /tmp/www-data && \
     mkdir -p /home/LogFiles && \
     chmod -R 777 /tmp/chrome-profiles /tmp/www-data /home/LogFiles && \
     chown -R www-data:www-data /tmp/www-data
 
-# Fix home directory permissions for www-data user
-RUN usermod -d /tmp/www-data www-data
+# Set proper permissions for Chrome directories
+#RUN chmod -R 777 /tmp/chrome-profiles
 
-# Copy application files
+# Copy application files from builder to Azure directory
 COPY --from=builder /app/vendor /home/site/wwwroot/vendor
 COPY src/ /home/site/wwwroot/
 COPY composer.json /home/site/wwwroot/
 
-# Set proper permissions
+# Set proper permissions for Azure directory
 RUN chmod -R 755 /home/site/wwwroot
 
-# Copy ChromeDriver initialization script to Azure startup directory
-COPY init-chromedriver.sh /opt/startup/init-chromedriver.sh
-RUN chmod +x /opt/startup/init-chromedriver.sh
+# Copy custom configuration files (if they exist)
+# Note: Azure PHP image already has nginx and supervisor configured
+# We'll override with our custom configurations if needed
+
+# Copy custom nginx configuration if you have one
+#COPY nginx-azure.conf /etc/nginx/sites-available/default 2>/dev/null || :
+
+# Copy custom supervisor configuration for ChromeDriver
+COPY supervisord-chromedriver.conf /etc/supervisor/conf.d/chromedriver.conf
+
+# Copy custom PHP configuration if needed
+COPY php-azure.ini /usr/local/etc/php/conf.d/999-custom.ini
+
+# Create startup script for Chrome profile cleanup
+#COPY startup.sh /startup.sh
+#RUN chmod +x /startup.sh
 
 # Declare volume for Azure persistent storage
 VOLUME ["/home"]
 
 WORKDIR /home/site/wwwroot
 
-EXPOSE 80
+#EXPOSE 80
 
-# Use Azure's default startup process (it will automatically run our init script)
-# Don't override CMD - let Azure use its default
+# Use the existing Azure startup mechanism with our customizations
+#CMD ["/startup.sh"]
