@@ -5,6 +5,26 @@ use Facebook\WebDriver\Chrome\ChromeOptions;
 use Facebook\WebDriver\Remote\DesiredCapabilities;
 use Facebook\WebDriver\Remote\RemoteWebDriver;
 
+// Set environment variables to prevent Chrome from using /var/www as home
+putenv('HOME=/tmp/www-data');
+putenv('XDG_CONFIG_HOME=/tmp/www-data/.config');
+putenv('XDG_CACHE_HOME=/tmp/www-data/.cache');
+putenv('XDG_DATA_HOME=/tmp/www-data/.local/share');
+
+// Ensure directories exist
+$dirs = [
+    '/tmp/www-data',
+    '/tmp/www-data/.config',
+    '/tmp/www-data/.cache', 
+    '/tmp/www-data/.local/share'
+];
+
+foreach ($dirs as $dir) {
+    if (!is_dir($dir)) {
+        mkdir($dir, 0755, true);
+    }
+}
+
 function checkChromeDriver() {
     echo "Checking ChromeDriver status...\n";
     
@@ -77,7 +97,13 @@ $options->addArguments([
     '--disable-blink-features=AutomationControlled',
     '--no-first-run',
     '--disable-extensions',
-    '--disable-plugins'
+    '--disable-plugins',
+    // Additional flags to prevent file system access issues
+    '--disable-default-apps',
+    '--disable-translate',
+    '--disable-sync',
+    '--metrics-recording-only',
+    '--safebrowsing-disable-auto-update'
 ]);
 
 $capabilities = DesiredCapabilities::chrome();
