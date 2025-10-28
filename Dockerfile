@@ -23,9 +23,10 @@ ENV DEBIAN_FRONTEND=noninteractive \
 
 # Install additional system dependencies for Chrome
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    wget unzip jq \
+    wget unzip jq curl procps net-tools \
     libnss3 libgconf-2-4 libxi6 libgtk-3-0 \
     libx11-xcb1 libxcomposite1 libxdamage1 libxrandr2 \
+    xvfb \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Install Google Chrome
@@ -43,17 +44,19 @@ RUN JSON_URL="https://googlechromelabs.github.io/chrome-for-testing/last-known-g
     chmod +x /usr/local/bin/chromedriver && \
     rm -rf /tmp/*
 
-# Create additional directories for Chrome profiles
-#RUN mkdir -p /tmp/chrome-profiles
+# Verify installations
+RUN echo "Chrome version:" && google-chrome --version && \
+    echo "ChromeDriver version:" && chromedriver --version
 
+# Create directories and set proper permissions
 RUN mkdir -p /tmp/chrome-profiles && \
     mkdir -p /tmp/www-data && \
     mkdir -p /home/LogFiles && \
     chmod -R 777 /tmp/chrome-profiles /tmp/www-data /home/LogFiles && \
     chown -R www-data:www-data /tmp/www-data
 
-# Set proper permissions for Chrome directories
-#RUN chmod -R 777 /tmp/chrome-profiles
+# Fix home directory for www-data user
+RUN usermod -d /tmp/www-data www-data
 
 # Copy application files from builder to Azure directory
 COPY --from=builder /app/vendor /home/site/wwwroot/vendor
@@ -61,7 +64,8 @@ COPY src/ /home/site/wwwroot/
 COPY composer.json /home/site/wwwroot/
 
 # Set proper permissions for Azure directory
-RUN chmod -R 755 /home/site/wwwroot
+RUN chown -R www-data:www-data /home/site/wwwroot && \
+    chmod -R 755 /home/site/wwwroot
 
 # Copy custom configuration files (if they exist)
 # Note: Azure PHP image already has nginx and supervisor configured
